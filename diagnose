@@ -55,6 +55,15 @@ _check_venv() {
   which python
   deactivate
 }
+_check_ags() {
+  pkill ags
+  pkill agsv1
+  agsv1 > ioar_ags.log 2>&1 &
+  GUI_PID=$!
+  sleep 10
+  kill $GUI_PID
+  echo "AGS log saved to \"ioar_ags.log\"."
+}
 
 e "Checking git repo info"
 x git remote get-url origin
@@ -77,13 +86,15 @@ x ls -l ~/.local/state/ioar/.venv
 
 #e "Checking command existence"
 #commands=(yay pacman zypper apt dnf yum)
-#commands+=(ags agsv1)
+commands+=(ags agsv1)
 #commands+=(Hyprland hypr{ctl,idle,lock,picker})
 #commands+=(uv)
-#for i in "${commands[@]}";do x command -v $i;done
+for i in "${commands[@]}";do x command -v $i;done
 
 e "Checking versions"
 x Hyprland --version
+x ags --version
+x agsv1 --version
 
 e "Finished. Output saved as \"$output_file\"."
 if ! command -v curl 2>&1 >>/dev/null ;then echo "\"curl\" not found, pastebin upload unavailable.";exit;fi
