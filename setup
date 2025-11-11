@@ -3,6 +3,8 @@ cd "$(dirname "$0")"
 REPO_ROOT="$(pwd)"
 source ./sdata/lib/environment-variables.sh
 source ./sdata/lib/functions.sh
+source ./sdata/lib/package-installers.sh
+source ./sdata/lib/dist-determine.sh
 
 prevent_sudo_or_root
 set -e
@@ -48,43 +50,16 @@ case $1 in
 esac
 #####################################################################################
 start_ts="$(date +%s)"
-function print_runtime() {
-  local end_ts
-  end_ts="$(date +%s)"
-  local elapsed=$((end_ts - start_ts))
-  local days=$((elapsed / 86400))
-  local hours=$(( (elapsed % 86400) / 3600 ))
-  local minutes=$(( (elapsed % 3600) / 60 ))
-  local seconds=$(( elapsed % 60 ))
-  local human=""
-  if [ "$days" -gt 0 ]; then human="${human}${days}d "; fi
-  if [ "$hours" -gt 0 ]; then human="${human}${hours}h "; fi
-  if [ "$minutes" -gt 0 ]; then human="${human}${minutes}m "; fi
-  human="${human}${seconds}s"
-  printf "${STY_BLUE}Total runtime: $human (${elapsed} seconds)${STY_RST}\n"
-}
 trap print_runtime EXIT
 
-####################
-# Detect distro
-# Helpful link(s):
-# http://stackoverflow.com/questions/29581754
-# https://github.com/which-distro/os-release
-OS_RELEASE_FILE_CUSTOM="${REPO_ROOT}/os-release"
-if test -f "${OS_RELEASE_FILE_CUSTOM}"; then
-  printf "${STY_YELLOW}Warning: using custom os-release file \"${OS_RELEASE_FILE_CUSTOM}\".${STY_RST}\n"
-  OS_RELEASE_FILE="${OS_RELEASE_FILE_CUSTOM}"
-elif test -f /etc/os-release; then
-  OS_RELEASE_FILE=/etc/os-release
-else
-  printf "${STY_RED}/etc/os-release does not exist, aborting...${STY_RST}\n" ; exit 1
-fi
-export OS_DISTRO_ID=$(awk -F'=' '/^ID=/ { gsub("\"","",$2); print tolower($2) }' ${OS_RELEASE_FILE} 2> /dev/null)
-export OS_DISTRO_ID_LIKE=$(awk -F'=' '/^ID_LIKE=/ { gsub("\"","",$2); print tolower($2) }' ${OS_RELEASE_FILE} 2> /dev/null)
 #####################################################################################
 if [[ -f "${SUBCMD_DIR}/options.sh" ]];
   then source "${SUBCMD_DIR}/options.sh"
 fi
+for function in ${print_os_group_id_functions[@]}; do
+  $function
+done
+pause
 case ${SUBCMD_NAME} in
   install)
     if [[ "${SKIP_ALLGREETING}" != true ]]; then

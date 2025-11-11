@@ -127,3 +127,18 @@ function backup_clashing_targets(){
   x mkdir -p $backup_dir
   x rsync -av --progress "${args_includes[@]}" "$target_dir/" "$backup_dir/"
 }
+function print_runtime(){
+  local end_ts
+  end_ts="$(date +%s)"
+  local elapsed=$((end_ts - start_ts))
+  local days=$((elapsed / 86400))
+  local hours=$(( (elapsed % 86400) / 3600 ))
+  local minutes=$(( (elapsed % 3600) / 60 ))
+  local seconds=$(( elapsed % 60 ))
+  local human=""
+  if [ "$days" -gt 0 ]; then human="${human}${days}d "; fi
+  if [ "$hours" -gt 0 ]; then human="${human}${hours}h "; fi
+  if [ "$minutes" -gt 0 ]; then human="${human}${minutes}m "; fi
+  human="${human}${seconds}s"
+  printf "${STY_BLUE}Total runtime: $human (${elapsed} seconds)${STY_RST}\n"
+}
